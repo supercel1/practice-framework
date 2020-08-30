@@ -26,3 +26,13 @@ class StepTest(unittest.TestCase):
         self.assertEqual(z.data, np.array(13.0))
         self.assertEqual(x.grad, 4.0)
         self.assertEqual(y.grad, 6.0)
+
+        a = Variable(np.array(2.0))
+        b = add(a, a)
+        b.backward()
+        self.assertEqual(a.grad, 2.0)
+
+        a.cleargrad()
+        b = add(add(a, a), a)
+        b.backward()
+        self.assertEqual(a.grad, 3.0)
