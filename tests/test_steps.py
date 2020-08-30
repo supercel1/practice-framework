@@ -7,9 +7,9 @@ import numpy as np
 module_dir = os.getenv('MY_MODULE_PATH', default=os.getcwd())
 sys.path.append(module_dir)
 
-from steps import add, Variable
+from steps import add, square, Variable
 
-class AddTest(unittest.TestCase):
+class StepTest(unittest.TestCase):
     global module_dir
 
     def setUp(self):
@@ -18,9 +18,11 @@ class AddTest(unittest.TestCase):
         self.modulename = "steps.core_simple.py"
 
     def test_forward(self):
-        x0 = Variable(np.array(2))
-        x1 = Variable(np.array(3))
-        y = add(x0, x1)
-        expected = np.array(5)
-        print(y.data, expected)
-        self.assertEqual(y.data, expected)
+        x = Variable(np.array(2.0))
+        y = Variable(np.array(3.0))
+        
+        z = add(square(x), square(y))
+        z.backward()
+        self.assertEqual(z.data, np.array(13.0))
+        self.assertEqual(x.grad, 4.0)
+        self.assertEqual(y.grad, 6.0)

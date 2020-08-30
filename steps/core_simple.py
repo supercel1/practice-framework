@@ -20,11 +20,16 @@ class Variable:
         funcs = [self.creator]
         while funcs:
             f = funcs.pop()
-            x, y = f.input, f.output
-            x.grad = f.backward(y.grad)
+            gys = [output.grad for output in f.outputs]
+            gxs = f.backward(*gys)
+            if not isinstance(gxs, tuple):
+                gxs = (gxs,)
+            
+            for x, gx in zip(f.inputs, gxs):
+                x.grad = gx
 
-            if x.creator is not None:
-                funcs.append(x.creator)
+                if x.creator is not None:
+                    funcs.append(x.creator)
 
 class Function:
     def __call__(self, *inputs: List[Variable]) -> List[Variable]:
@@ -52,7 +57,7 @@ class Square(Function):
         return x ** 2
 
     def backward(self, gy: float) -> float:
-        x = self.input.data
+        x = self.inputs[0].data
         return 2 * x * gy
 
 class Exp(Function):
@@ -68,6 +73,9 @@ class Add(Function):
         y = x0 + x1
         return y
 
+    def backward(self, gy: float) -> float:
+        return gy, gy
+
 # 関数の基底クラスのインスタンス化をまとめる
 def square(x: Variable) -> Variable:
     return Square()(x)
@@ -75,7 +83,7 @@ def square(x: Variable) -> Variable:
 def exp(x: Variable) -> Variable:
     return Exp()(x)
 
-def add(x0: np.ndarray, x1: np.ndarray):
+def add(x0: Variable, x1: Variable) -> Variable:
     return Add()(x0, x1)
 
 def as_array(x) -> np.ndarray:
