@@ -7,24 +7,20 @@ import numpy as np
 module_dir = os.getenv('MY_MODULE_PATH', default=os.getcwd())
 sys.path.append(module_dir)
 
-from steps import Add, Variable
+from steps import add, Variable
 
 class AddTest(unittest.TestCase):
     global module_dir
 
     def setUp(self):
         self.moduledir = os.path.join(module_dir, "steps")
-        self.modulefilepath = os.path.join(self.moduledir, "step11.py")
-        self.modulename = "steps.step11.py"
-        self.Add = Add()
-
-    def tearDown(self):
-        del self.Add
+        self.modulefilepath = os.path.join(self.moduledir, "core_simple.py")
+        self.modulename = "steps.core_simple.py"
 
     def test_forward(self):
-        xs = [Variable(np.array(2)), Variable(np.array(3))]
-        f = Add()
-        ys = f(xs)
-        y = ys[0]
+        x0 = Variable(np.array(2))
+        x1 = Variable(np.array(3))
+        y = add(x0, x1)
         expected = np.array(5)
+        print(y.data, expected)
         self.assertEqual(y.data, expected)
