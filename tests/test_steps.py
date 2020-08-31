@@ -7,7 +7,7 @@ import numpy as np
 module_dir = os.getenv('MY_MODULE_PATH', default=os.getcwd())
 sys.path.append(module_dir)
 
-from steps import add, square, Variable, no_grad
+from steps import add, mul, square, Variable, no_grad
 
 class StepTest(unittest.TestCase):
     global module_dir
@@ -60,3 +60,15 @@ class StepTest(unittest.TestCase):
             x = Variable(np.array(2.0))
             y = square(x)
             self.assertEqual(x.grad, None)
+
+    def test_mul(self):
+        a = Variable(np.array(3.0))
+        b = Variable(np.array(2.0))
+        c = Variable(np.array(1.0))
+
+        y = a * b + c
+
+        y.backward()
+
+        self.assertEqual(a.grad, 2.0)
+        self.assertEqual(b.grad, 3.0)

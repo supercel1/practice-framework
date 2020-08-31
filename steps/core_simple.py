@@ -1,7 +1,7 @@
-import contextlib
 import weakref
 import numpy as np
 from typing import List, Tuple
+from .config import Config
 
 class Variable:
     def __init__(self, data: np.ndarray, name=None):
@@ -56,8 +56,39 @@ class Variable:
     def cleargrad(self):
         self.grad = None
 
+    @property
+    def shape(self) -> Tuple[int]:
+        return self.data.shape
+
+    @property
+    def ndim(self) -> int:
+        return self.data.ndim
+
+    @property
+    def size(self) -> int:
+        return self.data.size
+
+    @property
+    def dtype(self):
+        return self.data.dtype
+
+    def __len__(self):
+        return len(self.data)
+
+    def __repr__(self):
+        if self.data is None:
+            return "variable(None)"
+        p = str(self.data).replace("\n", "\n" + " " * 9)
+        return "variable(" + p + ")"
+
+    def __mul__(self, other):
+        return mul(self, other)
+
+    def __add__(self, other):
+        return add(self, other)
+
 class Function:
-    def __call__(self, *inputs: List[Variable]) -> List[Variable]:
+    def __call__(self, *inputs: Tuple[Variable]) -> List[Variable]:
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
@@ -104,6 +135,15 @@ class Add(Function):
     def backward(self, gy: float) -> float:
         return gy, gy
 
+class Mul(Function):
+    def forward(self, x0: np.ndarray, x1: np.ndarray) -> np.ndarray:
+        y = x0 * x1
+        return y
+
+    def backward(self, gy: float) -> float:
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        return x1 * gy, x0 * gy
+
 # 関数の基底クラスのインスタンス化をまとめる
 def square(x: Variable) -> Variable:
     return Square()(x)
@@ -114,22 +154,10 @@ def exp(x: Variable) -> Variable:
 def add(x0: Variable, x1: Variable) -> Variable:
     return Add()(x0, x1)
 
+def mul(x0: Variable, x1: Variable) -> Variable:
+    return Mul()(x0, x1)
+
 def as_array(x) -> np.ndarray:
     if np.isscalar(x):
         return np.array(x)
     return x
-
-class Config:
-    enable_backprop = True
-
-@contextlib.contextmanager
-def using_config(name: str, value: bool):
-    old_value = getattr(Config, name)
-    setattr(Config, name, value)
-    try:
-        yield
-    finally:
-        setattr(Config, name, old_value)
-
-def no_grad():
-    return using_config("enable_backprop", False)
