@@ -1,9 +1,11 @@
 import weakref
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from .config import Config
 
 class Variable:
+    __array_priority__ = 200
+    
     def __init__(self, data: np.ndarray, name=None):
         if data is not None:
             if not isinstance(data, np.ndarray):
@@ -84,11 +86,18 @@ class Variable:
     def __mul__(self, other):
         return mul(self, other)
 
+    def __rmul__(self, other):
+        return mul(self, other)
+
     def __add__(self, other):
+        return add(self, other)
+
+    def __radd__(self, other):
         return add(self, other)
 
 class Function:
     def __call__(self, *inputs: Tuple[Variable]) -> List[Variable]:
+        inputs = [as_variable(x) for x in inputs]
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
@@ -151,13 +160,20 @@ def square(x: Variable) -> Variable:
 def exp(x: Variable) -> Variable:
     return Exp()(x)
 
-def add(x0: Variable, x1: Variable) -> Variable:
+def add(x0, x1) -> Variable:
+    x1 = as_array(x1)
     return Add()(x0, x1)
 
-def mul(x0: Variable, x1: Variable) -> Variable:
+def mul(x0, x1) -> Variable:
+    x1 = as_array(x1)
     return Mul()(x0, x1)
 
 def as_array(x) -> np.ndarray:
     if np.isscalar(x):
         return np.array(x)
     return x
+
+def as_variable(obj: Union[Variable, np.ndarray]) -> Variable:
+    if isinstance(obj, Variable):
+        return obj
+    return Variable(obj)
