@@ -2,21 +2,14 @@ import sys, os
 import unittest
 import numpy as np
 
+if "__file__" in globals():
+    import os, sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-# 環境変数 MY_MODULE_PATH を読み込み、sys.path へ設定
-module_dir = os.getenv('MY_MODULE_PATH', default=os.getcwd())
-sys.path.append(module_dir)
-
-from steps import add, mul, square, Variable, no_grad
+from dezero.core_simple import add, mul, square, Variable
+from dezero.config import no_grad
 
 class StepTest(unittest.TestCase):
-    global module_dir
-
-    def setUp(self):
-        self.moduledir = os.path.join(module_dir, "steps")
-        self.modulefilepath = os.path.join(self.moduledir, "core_simple.py")
-        self.modulename = "steps.core_simple.py"
-
     def test_forward(self):
         x = Variable(np.array(2.0))
         y = Variable(np.array(3.0))
@@ -72,3 +65,31 @@ class StepTest(unittest.TestCase):
 
         self.assertEqual(a.grad, 2.0)
         self.assertEqual(b.grad, 3.0)
+
+    def test_neg(self):
+        a = Variable(np.array(2.0))
+        b = -a
+        self.assertEqual(b.data, np.array(-2.0))
+
+    def test_sub(self):
+        a = Variable(np.array(2.0))
+        b = a - 3.0
+        c = 3.0 - a
+
+        self.assertEqual(b.data, np.array(-1.0))
+        self.assertEqual(c.data, np.array(1.0))
+
+    def test_div(self):
+        a = Variable(np.array(4.0))
+        b = Variable(np.array(2.0))
+        c = a / b
+        self.assertEqual(c.data, np.array(2.0))
+
+        c.backward()
+        self.assertEqual(a.grad, 1/2.0)
+        self.assertEqual(b.grad, -4.0 / 2.0 ** 2)
+
+    def test_pow(self):
+        x = Variable(np.array(2.0))
+        y = x ** 3
+        self.assertEqual(y.data, np.array(8.0))
