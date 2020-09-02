@@ -235,6 +235,7 @@ def setup_variable() -> None:
     Variable.__sub__ = sub
     Variable.__rsub__ = rsub
     Variable.__mul__ = mul
+    Variable.__rmul__ = mul
     Variable.__truediv__ = div
     Variable.__rtruediv__ = rdiv
     Variable.__neg__ = neg

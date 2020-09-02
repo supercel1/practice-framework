@@ -8,6 +8,7 @@ if "__file__" in globals():
 
 from dezero.core_simple import add, mul, square, Variable
 from dezero.config import no_grad
+from dezero.utils import plot_dot_graph
 
 class StepTest(unittest.TestCase):
     def test_forward(self):
@@ -59,12 +60,10 @@ class StepTest(unittest.TestCase):
         b = Variable(np.array(2.0))
         c = Variable(np.array(1.0))
 
-        y = a * b + c
-
-        y.backward()
-
-        self.assertEqual(a.grad, 2.0)
-        self.assertEqual(b.grad, 3.0)
+        y = 2.0 * a
+        z = a * 2.0
+        self.assertEqual(y.data, np.array(6.0))
+        self.assertEqual(z.data, np.array(6.0))
 
     def test_neg(self):
         a = Variable(np.array(2.0))
@@ -93,3 +92,27 @@ class StepTest(unittest.TestCase):
         x = Variable(np.array(2.0))
         y = x ** 3
         self.assertEqual(y.data, np.array(8.0))
+
+    def test_grad(self):
+        def sphere(x, y):
+            z = x ** 2 + y ** 2
+            return z
+        
+        x = Variable(np.array(1.0))
+        y = Variable(np.array(1.0))
+        z = sphere(x, y)
+        z.backward()
+        self.assertEqual(x.grad, 2.0)
+        self.assertEqual(y.grad, 2.0)
+
+        def goldstein(x, y):
+            z = (1 + (x + y + 1) ** 2 * (19 - 14*x + 3 * x ** 2 - 14*y + 6*x*y + 3*y**2)) * \
+                (30 + (2*x - 3*y)**2 * (18 - 32*x + 12*x**2 + 48*y - 36*x*y + 27*y**2))
+            return z
+
+        a = Variable(np.array(1.0))
+        b = Variable(np.array(1.0))
+        c = goldstein(a, b)
+        c.backward()
+        self.assertEqual(a.grad, -5376.0)
+        self.assertEqual(b.grad, 8064.0)
