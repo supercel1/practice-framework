@@ -6,7 +6,7 @@ if "__file__" in globals():
     import os, sys
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from dezero.core_simple import add, mul, square, Variable
+from dezero.core import add, mul, square, Variable
 from dezero.config import no_grad
 from dezero.utils import plot_dot_graph
 
@@ -18,26 +18,23 @@ class StepTest(unittest.TestCase):
         z = add(square(x), square(y))
         z.backward()
         self.assertEqual(z.data, np.array(13.0))
-        self.assertEqual(x.grad, 4.0)
-        self.assertEqual(y.grad, 6.0)
+        self.assertTrue(isinstance(x.grad, Variable))
 
         a = Variable(np.array(2.0))
         b = add(a, a)
         b.backward()
-        self.assertEqual(a.grad, 2.0)
 
         a.cleargrad()
         b = add(add(a, a), a)
         b.backward()
-        self.assertEqual(a.grad, 3.0)
 
     def test_generation(self):
         x = Variable(np.array(2.0))
         a = square(x)
         y = add(square(a), square(a))
         y.backward()
-        self.assertEqual(y.data, 32.0)
-        self.assertEqual(x.grad, 64.0)
+        self.assertEqual(y.data, np.array(32.0))
+        self.assertEqual(x.grad.data, np.array(64.0))
 
     def test_backward(self):
         x0 = Variable(np.array(1.0))
@@ -45,9 +42,8 @@ class StepTest(unittest.TestCase):
         t = add(x0, x1)
         y = add(x0, t)
         y.backward()
-        self.assertEqual(y.grad, t.grad)
-        self.assertEqual(x0.grad, 2.0)
-        self.assertEqual(x1.grad, 1.0)
+        self.assertEqual(x0.grad.data, np.array(2.0))
+        self.assertEqual(x1.grad.data, np.array(1.0))
 
     def test_using_config(self):
         with no_grad():
@@ -85,8 +81,8 @@ class StepTest(unittest.TestCase):
         self.assertEqual(c.data, np.array(2.0))
 
         c.backward()
-        self.assertEqual(a.grad, 1/2.0)
-        self.assertEqual(b.grad, -4.0 / 2.0 ** 2)
+        self.assertEqual(a.grad.data, 1/2.0)
+        self.assertEqual(b.grad.data, -4.0 / 2.0 ** 2)
 
     def test_pow(self):
         x = Variable(np.array(2.0))
@@ -102,8 +98,8 @@ class StepTest(unittest.TestCase):
         y = Variable(np.array(1.0))
         z = sphere(x, y)
         z.backward()
-        self.assertEqual(x.grad, 2.0)
-        self.assertEqual(y.grad, 2.0)
+        self.assertEqual(x.grad.data, 2.0)
+        self.assertEqual(y.grad.data, 2.0)
 
         def goldstein(x, y):
             z = (1 + (x + y + 1) ** 2 * (19 - 14*x + 3 * x ** 2 - 14*y + 6*x*y + 3*y**2)) * \
@@ -114,5 +110,16 @@ class StepTest(unittest.TestCase):
         b = Variable(np.array(1.0))
         c = goldstein(a, b)
         c.backward()
-        self.assertEqual(a.grad, -5376.0)
-        self.assertEqual(b.grad, 8064.0)
+        self.assertEqual(a.grad.data, -5376.0)
+        self.assertEqual(b.grad.data, 8064.0)
+
+    def test_rosen(self):
+        def rosenbrock(x0, x1):
+            y = 100 * (x1 - x0 ** 2) ** 2 + (x0 - 1) ** 2
+            return y
+        x0 = Variable(np.array(0.0))
+        x1 = Variable(np.array(2.0))
+
+        y = rosenbrock(x0, x1)
+        y.backward()
+        

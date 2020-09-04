@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from .core_simple import Variable, Function
+from .core import Variable, Function
 
 def _dot_var(v: Variable, verbose=False) -> str:
     dot_var = '{} [label="{}", color=orange, style=filled]\n'
@@ -49,7 +49,7 @@ def get_dot_graph(output: Variable, verbose=True) -> str:
                 add_func(x.creator)
     return 'digraph g {\n' + txt + '}'
 
-def plot_dot_graph(output, verbose=True, to_file='graph.png') -> None:
+def plot_dot_graph(output: Variable, verbose=True, to_file='graph.png') -> None:
     dot_graph = get_dot_graph(output, verbose)
 
     tmp_dir = os.path.join(os.path.expanduser('~'), '.dezero')

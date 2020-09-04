@@ -5,7 +5,7 @@ if "__file__" in globals():
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 
-from dezero.core_simple import Variable
+from dezero.core import Variable
 from dezero.utils import plot_dot_graph
 
 def goldstein(x, y):
