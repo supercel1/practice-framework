@@ -166,43 +166,6 @@ class Pow(Function):
         gx = c * x ** (c-1) * gy
         return gx
 
-class Square(Function):
-    def forward(self, x: np.ndarray) -> np.ndarray:
-        return x ** 2
-
-    def backward(self, gy: float) -> float:
-        x = self.inputs[0].data
-        return 2 * x * gy
-
-class Exp(Function):
-    def forward(self, x: np.ndarray) -> np.ndarray:
-        return np.exp(x)
-
-    def backward(self, gy: float) -> float:
-        x = self.input.data
-        return np.exp(x) * gy
-
-class Sin(Function):
-    def forward(self, x: np.ndarray) -> np.ndarray:
-        y = np.sin(x)
-        return y
-
-    def backward(self, gy: Variable) -> Variable:
-        x, = self.inputs
-        gx = gy * np.cos(x.data)
-        return gx
-
-
-# 関数の基底クラスのインスタンス化をまとめる
-def square(x: Variable) -> Variable:
-    return Square()(x)
-
-def exp(x: Variable) -> Variable:
-    return Exp()(x)
-
-def sin(x: Variable) -> Variable:
-    return Sin()(x)
-
 def neg(x) -> Variable:
     return Neg()(x)
 
