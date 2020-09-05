@@ -48,3 +48,16 @@ class Cos(Function):
 
 def cos(x: Variable):
     return Cos()(x)
+
+class Tanh(Function):
+    def forward(self, x: np.ndarray):
+        y = np.tanh(x)
+        return y
+
+    def backward(self, gy: Variable):
+        y = self.outputs[0]() # output is weakref
+        gx = gy * (1 - y * y)
+        return gx
+
+def tanh(x: Variable):
+    return Tanh()(x)
