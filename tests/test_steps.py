@@ -6,8 +6,9 @@ if "__file__" in globals():
     import os, sys
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from dezero.core import add, mul, square, Variable
+from dezero.core import add, mul, Variable
 from dezero.config import no_grad
+from dezero.functions import square
 from dezero.utils import plot_dot_graph
 
 class StepTest(unittest.TestCase):
