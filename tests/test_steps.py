@@ -8,7 +8,7 @@ if "__file__" in globals():
 
 from dezero.core import add, mul, Variable
 from dezero.config import no_grad
-from dezero.functions import square
+import dezero.functions as F
 from dezero.utils import plot_dot_graph
 
 class StepTest(unittest.TestCase):
@@ -16,7 +16,7 @@ class StepTest(unittest.TestCase):
         x = Variable(np.array(2.0))
         y = Variable(np.array(3.0))
         
-        z = add(square(x), square(y))
+        z = add(F.square(x), F.square(y))
         z.backward()
         self.assertEqual(z.data, np.array(13.0))
         self.assertTrue(isinstance(x.grad, Variable))
@@ -31,8 +31,8 @@ class StepTest(unittest.TestCase):
 
     def test_generation(self):
         x = Variable(np.array(2.0))
-        a = square(x)
-        y = add(square(a), square(a))
+        a = F.square(x)
+        y = add(F.square(a), F.square(a))
         y.backward()
         self.assertEqual(y.data, np.array(32.0))
         self.assertEqual(x.grad.data, np.array(64.0))
@@ -49,7 +49,7 @@ class StepTest(unittest.TestCase):
     def test_using_config(self):
         with no_grad():
             x = Variable(np.array(2.0))
-            y = square(x)
+            y = F.square(x)
             self.assertEqual(x.grad, None)
 
     def test_mul(self):
@@ -124,3 +124,16 @@ class StepTest(unittest.TestCase):
         y = rosenbrock(x0, x1)
         y.backward()
         
+    def test_shape(self):
+        x = Variable(np.random.randn(1, 2, 3))
+        y = x.reshape((6,))
+        y.backward(retain_grad=True)
+        self.assertEqual(x.shape, x.grad.shape)
+        self.assertEqual(y.shape, (6,))
+
+        a = Variable(np.array([[1, 2, 3], [4, 5, 6]]))
+        b = F.transpose(a)
+        c = a.T
+        b.backward()
+        self.assertEqual(a.grad.shape, a.shape)
+        self.assertEqual(b.shape, c.shape)

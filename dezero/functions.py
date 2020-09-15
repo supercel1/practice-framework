@@ -1,5 +1,5 @@
 import numpy as np
-from dezero.core import Variable, Function
+from dezero.core import Variable, Function, as_variable
 
 class Square(Function):
     def forward(self, x: np.ndarray) -> np.ndarray:
@@ -61,3 +61,32 @@ class Tanh(Function):
 
 def tanh(x: Variable):
     return Tanh()(x)
+
+class Reshape(Function):
+    def __init__(self, shape):
+        self.shape = shape
+
+    def forward(self, x: np.ndarray):
+        self.x_shape = x.shape
+        y = x.reshape(self.shape)
+        return y
+
+    def backward(self, gy: Variable):
+        return reshape(gy, self.x_shape)
+
+def reshape(x, shape):
+    if x.shape == shape:
+        return as_variable(x)
+    return Reshape(shape)(x)
+
+class Transpose(Function):
+    def forward(self, x: np.ndarray):
+        y = np.transpose(x)
+        return y
+
+    def backward(self, gy: Variable):
+        gx = transpose(gy)
+        return gx
+
+def transpose(x: Variable):
+    return Transpose()(x)
